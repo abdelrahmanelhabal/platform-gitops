@@ -1,0 +1,42 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+
+metadata:
+  name: my-applicationset
+  namespace: argocd
+
+spec:
+  generators:
+    - git:
+        repoURL: https://github.com/abdelrahmanelhabal/platform-gitops.git
+        revision: main
+
+        directories:
+          - path: apps/*/helm
+
+  template:
+    metadata:
+      name: '{{path[1]}}'
+
+    spec:
+      project: default
+
+      source:
+        repoURL: https://github.com/abdelrahmanelhabal/platform-gitops.git
+        targetRevision: main
+        path: '{{path}}'
+
+        helm:
+          releaseName: '{{path[1]}}'
+
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: default
+
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+
+        syncOptions:
+          - CreateNamespace=true
