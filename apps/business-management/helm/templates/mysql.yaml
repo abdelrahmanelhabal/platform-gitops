@@ -1,0 +1,94 @@
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: {{ include "mysql.fullname" . }}
+
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+
+spec:
+  clusterIP: None
+
+  selector:
+    app: {{ include "mysql.fullname" . }}
+
+  ports:
+    - name: mysql
+      port: {{ .Values.database.port }}
+      targetPort: {{ .Values.database.port }}
+      protocol: TCP
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+
+metadata:
+  name: {{ include "mysql.fullname" . }}
+
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+
+spec:
+  serviceName: {{ include "mysql.fullname" . }}
+
+  replicas: {{ .Values.mysql.replicaCount }}
+
+  selector:
+    matchLabels:
+      app: {{ include "mysql.fullname" . }}
+
+  template:
+    metadata:
+      labels:
+        app: {{ include "mysql.fullname" . }}
+
+    spec:
+      containers:
+        - name: mysql
+
+          image: "{{ .Values.mysql.image.repository }}:{{ .Values.mysql.image.tag }}"
+
+          imagePullPolicy: {{ .Values.mysql.image.pullPolicy }}
+
+          ports:
+            - containerPort: {{ .Values.database.port }}
+              protocol: TCP
+
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "app.fullname" . }}-secret
+                  key: DATABASE_PASSWORD
+
+            - name: MYSQL_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "app.fullname" . }}-secret
+                  key: DATABASE_NAME
+
+          # -------------------------------------------------
+          # Persistent storage mount
+          # -------------------------------------------------
+          volumeMounts:
+            - name: mysql-data
+              mountPath: /var/lib/mysql
+
+  # ---------------------------------------------------------
+  # Persistent Volume Claim template
+  # ---------------------------------------------------------
+  volumeClaimTemplates:
+    - metadata:
+        # Each MySQL Pod gets its own persistent volume
+        name: mysql-data
+
+      spec:
+        # Volume can be mounted by one node at a time
+        accessModes:
+          - ReadWriteOnce
+
+        # Requested persistent storage size
+        resources:
+          requests:
+            storage: {{ .Values.mysql.storage }}

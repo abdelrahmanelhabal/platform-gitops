@@ -1,0 +1,63 @@
+# Number of application pods to run
+replicaCount: 3
+
+# Override the chart name
+nameOverride: ""
+
+# Override the full resource name
+fullnameOverride: ""
+
+# Application Docker image configuration
+image:
+  repository: abdelrahaman910/business-management-system
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+# Kubernetes Service configuration
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+  protocol: TCP
+
+# External Secrets configuration
+# Used to retrieve database credentials from AWS Secrets Manager
+externalSecret:
+  region: us-east-1
+  secretName: business-management-mysql
+
+# Ingress configuration
+# Exposes the application outside the Kubernetes cluster
+ingress:
+  enabled: true
+  className: nginx
+  annotations: {}
+
+  hosts:
+    - host: business-management.local
+      paths:
+        - path: /
+          pathType: Prefix
+
+
+# Database connection configuration
+database:
+  name: businessproject
+  port: 3306
+
+# MySQL configuration
+mysql:
+  # Number of MySQL pods
+  replicaCount: 3
+
+  # MySQL Docker image configuration
+  image:
+    repository: mysql
+    tag: "8.4"
+    pullPolicy: IfNotPresent
+
+  # Database created by MySQL
+  database: businessproject
+
+  # Persistent storage size for MySQL
+  storage: 10Gi
