@@ -6,7 +6,7 @@
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
-{{- printf "%s-%s" .Release.Name (include "app.name" .) | trunc 63 | trimSuffix "-" }}
+{{- .Release.Name | trunc 63 | trimSuffix "-" }}
 {{- end }}
 {{- end }}
 
@@ -25,4 +25,4 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 
 {{- define "mysql.fullname" -}}
 {{- printf "%s-mysql" (include "app.fullname" .) | trunc 63 | trimSuffix "-" }}
-{{- end }}
+{{- end }}  
